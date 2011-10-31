@@ -1,0 +1,278 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,fullpage}
+\setlength{\parindent}{0in}
+\begin{document}
+\newcommand\codeHighlight[1]{\textcolor[rgb]{1,0,0}{\textbf{#1}}}
+
+\begin{center}\textsc{\textbf{61c NOTECARD OUTLINE/PERSONAL REVIEW}}\end{center} 
+%BY GABE THE GREATEST ONE
+\section{Caches} % (fold)
+\label{sec:caches}
+
+\begin{center}\textsc{misc overview}\end{center} 
+Temporal locality: items referenced will tend to be referenced again soon.
+
+Spatial locality: if an item is referenced, items near it will tend to be
+referenced more often
+
+Large cache sizes reduce miss rate via temporal and spatial locality, but can increase hit time
+
+Large block sizes reduce miss rate via spatial locality but increase miss penalty
+
+Types:
+Direct mapped: each block in memory maps to exactly one block in the cache. Uses address mapping: (block address) modulo (\# of blocks in cache).
+
+\begin{center}\textsc{cache-memory consistency}\end{center} 
+2 policies: Write through and write back.
+
+\begin{itemize}
+	\item write through: Write to cache and write through to the memory. This direct approach is too slow, so include a Write Buffer that writes to memory in parallel to the actions of the processor
+	
+	\item write back: write only to cache and then write to memory {\bf only} when the block is evicted from the cache. Include the dirty bit to see if data was written to the block and only write back if the dirty bit is set.
+	
+\end{itemize}
+Sources of cache misses: the 3 C's
+
+\begin{itemize}
+	\item Compulsory (cold start, first reference): the first access to a block
+	will result in a miss - unavoidable. Soln: increase block size to store 	
+	more blocks, but may increase miss penalty
+	
+	\item Capacity: cache can't hold all the blocks ever! Soln: increase cache 
+	size, but this may increase access time.
+	
+	\item Conflict/collision: multiple memory locations mapped to the same cache location. Soln: increase cache size, but this may increase hit time.
+\end{itemize}
+
+Local miss rate: fraction of references to one level of cache that miss: For L2, this would be L2 Misses / L1 Misses.
+
+Global miss rate: fraction of references that miss in all levels of a cache. For a 2 level cache this would be L2 MR * L1 MR = L2 misses / L1 misses * L1 misses / total accesses
+
+Improving cache performance
+\begin{itemize}
+	\item Reduce time to hit in cache
+	
+	smaller cache. Perhaps use 1 word blocks
+	
+	\item Reduce miss rate
+	
+	use a bigger cache and/or bigger blocks
+	
+	\item reduce the miss penalty
+	
+	use smaller blocks. Use multiple cache levels. Use a write buffer to hold the dirty (written to) blocks so you don't have to stall until they're written to memory.
+\end{itemize}
+
+
+\begin{center}\textsc{equations}\end{center} 
+	tag + index + offset = address bits (usually 32)
+	
+	valid + dirty + tag + block bits = bits per row 
+	
+	[block bits are the block size as bits]
+	
+	Block size = $2^{m}$ // m = offset bits
+	
+	\# of rows = $2^{n}$ // n = index bits
+	
+	Tag field = 32-(n+m+2) // n = index bits, m = offset bits
+	
+	Cache Size = $2^{n + m}$ = \# of rows $\cdot$ blocksize
+	
+	Total bits = $2^n \cdot$ (block size + tag size + dirty size + valid size) [storing the index is not necessary because we need to know it in order to access the block!]
+	
+	\textbf{REMEMBER:}
+	To select a cache entry, you need a 32-bit address as follows:
+	
+	[32-(n+m+2) bit tag][n bit index][m+2 bit offset]
+	
+	Block size is $2^m$ words, so m bits used for the word w/n the block, and 2 bits are used for the byte part of the address.
+	
+	Inside the cache, we have:
+	
+	[valid bit][dirty bit (only if direct mapped)][tag bits][block bits]
+	
+
+\begin{center}\textsc{maths}\end{center} 
+You can have different combinations of tag, offset and index. Let's say we have a 16kB cache and a block size of 64 bytes. Block size is 64 bytes = $2^6$ bytes. Therefore, we have 6 offset bits. How many index bits do we have? Divide
+16kB by 64 B: $2^4\cdot2^{10} / 2^6 = 2^8$. Just read off the exponent: we have 8 index bits. To find the tag bits: do 32 - (6+8+2) = 16. 
+Look at the breakdown:
+\begin{center}[1001100011010011][10101010][00000100]\end{center}
+First section is the tag. Second is the index, which changes only every time the offset bits go through a cycle (000000 $\rightarrow$ 111111). Third is the offset, which distinguish words w/n a cache block. The last 2 bits distinguish between bytes in a word
+
+\begin{center}\textsc{amat}\end{center} 
+For a 1-level cache:
+	
+\begin{center}AMAT = Hit time + (Miss Rate $\cdot$ Miss Penalty)\end{center}
+	
+For multi-level caches, the miss penalty for level $i$ is the AMAT for level $i+1$. For the lowest level cache, the AMAT is the access time for the main memory.
+	
+	
+\begin{center}\textsc{set associative caches}\end{center} 
+	For a fixed-size cache, increase by a factor of two of associateivity doubles the number of blocks per set and halves the number of sets - decrease index by 1 bit and increase tag by 1 bit
+	\begin{itemize}
+		\item tag (tag compare) $|$ index (selects the set) $|$ block offset (selects word in block) $|$ byte(offset)
+		\item decrease associativity by decreasing tag (and vice versa). No index: fully associative (only one set). Directmapped: (smaller tags, only a single comparator)
+		\item when we get a miss, replace the least recently used (LRU) block. For a 2 way set-associative cache, one bit per set is set to 1 when a block is used (reset the other block to 0 to indicate it as the LRU)
+	\end{itemize}
+% section caches (end)
+
+\section{Performance} % (fold)
+\label{sec:performance}
+
+Latency: time to complete one task (response time or execution time)
+
+Bandwidth/Throughput: tasks completed per unit time
+
+CPU time per program = clock cycles per program * clock cycle time = instructions per program * average clock cycles per instruction * clock cycle time
+
+Average clock cycles per instruction * clock cycle time is the {\bf CPI}, or Clock Cycles per Instruction 
+
+Time (seconds per program) = 
+\begin{center}$\frac{Instructions}{Program} \cdot \frac{Clock cycles}{Instruction} \cdot \frac{Seconds}{Clock Cycle} $\end{center}
+% section performance (end)
+
+
+\section{code code code (a ship all filled with code)} % (fold)
+\label{sec:code_code_code_a_ship_all_filled_with_code_}
+
+\begin{center}\textsc{sizes}\end{center} 
+Byte: 8 bits
+
+Word: 4 bytes
+
+Short: 2 bytes
+
+Int: 4 bytes
+
+Char: 1 byte
+
+Unsigned: 4 bytes
+
+Signed: 4 bytes
+
+Array: 
+
+\begin{center}\textsc{pointers}\end{center} 
+\begin{itemize}
+	\item When transferring between C and MIPS, remember that in order to dereference a pointer *p, you must use lw \$t0 0(\$s0) [where \$s0 is the *p and \$t0 is just a temp variable]
+
+\item If you have to increment pointers, increment them by the appropriate size, i.e. if you have an int pointer *p, increment in MIPS with addiu \$s0 \$s0 4
+
+
+\end{itemize}
+% section code_code_code_a_ship_all_filled_with_code_ (end)
+
+\section{number representations} % (fold)
+\label{sec:number_representations}
+
+{\bf Least significant bit:} rightmost bit
+
+{\bf Most significant bit:} leftmost bit
+
+Increasing numeric significance from left to right is \textbf{little-endian} (most significant bit is 0)
+
+Decreasing numeric significance is {\bf big-endian} (most significant bit is 31)
+
+\begin{center}\textsc{powers of two}\end{center} 
+\begin{center}
+\begin{tabular}{ | l | l | c | c | r | r | r | r |}
+\hline
+1 & 2 & 3 & 4 & 5 & 6 & 7 & 8\\ \hline
+2 & 4 & 8 & 16 & 32 & 64 & 128 & 256\\ \hline\hline
+9 & 10 & 11 & 12 & 13 & 14 & 15 & 16 \\ \hline
+512 & 1024 & 2048 & 4096 & 8192 & 16384 & 32768 & 65536 \\ \hline\hline
+\end{tabular}	
+\end{center}
+	
+\begin{center}\textsc{hexadecimal}\end{center} 
+\begin{center}
+\begin{tabular}{ | l | l || c | c || c | c || r | r |}
+\hline
+0x0 & 0000 & 0x1 & 0001 & 0x2 & 0010 & 0x3 & 0011 \\ \hline \hline
+0x4 & 0100 & 0x5 & 0101 & 0x6 & 0110 & 0x7 & 0111 \\ \hline \hline
+0x8 & 1000 & 0x9 & 1001 & 0xA & 1010 & 0xB & 1011 \\ \hline \hline
+0xC & 1100 & 0xD & 1101 & 0xE & 1110 & 0xF & 1111 \\ \hline 
+\end{tabular}
+\end{center}
+\begin{center}\textsc{IEEE floating point}\end{center} 
+
+Special cases: 
+\begin{center}
+\begin{tabular}{ | l  |  c  ||  r |}
+\hline 
+Exponent & Significant & Meaning \\ \hline
+0 & 0 & 0 \\ \hline
+0 & Non-zero & Denormalized \# \\ \hline
+1$\rightarrow$254 & anything & float \\ \hline
+255 & 0 & infinity \\ \hline
+255 & non-zero & NaN \\ \hline
+\end{tabular}
+\end{center}
++ and - infinity both possible with the sign bit.
+
+Remember, the exponent bias is 127. EXP - Bias = effective exponent. EXP is what you encode into binary for the float representation. For shortcuts in determining the binary representation, take 10000000 $\rightarrow$ 1. Then just count up from there (ignore the leading 1 and add 1 to the binary representation of your exponent)
+% section number_representations (end)
+\section{pages} % (fold)
+\label{sec:pages}
+\begin{itemize}
+	\item divide memory address space into equal sized blocks (pages). Use a level of indirection to map program addresses into memory addresses. The table of mappings is called a page table
+	\item Processor-generated address (virtual address): page number [20 bits] $|$ offset [12 bits]
+	\item page table contains the physical address of the base of each page (page tables make it possible to store the pages of a program non-contiguously). Each program has it's own page table
+	\item program addresses called virtual addresses (space of all virtual addresses called virtual memory). Memory addresses called physical addresses (correspond to physical memory)
+	\item page table protection via access rights:
+	\begin{itemize}
+		\item read: read but not write page
+		\item read/write: read or write page
+		\item execute: can fetch instructions from page
+	\end{itemize}
+	\item From virtual address: use page number to index into page table: valid [1 bit] $|$ access rights [? bits] $|$ physical page address. Use offset from virtual address with the physical page address to get the physical memory address
+	\item page tables stored in main memory. 
+\end{itemize}
+\begin{center}\textsc{translation lookaside buffer (TLB)}\end{center} 
+	\begin{itemize}
+		\item TLB: Valid bit $|$ Read bit $|$ Write bit $|$ execute bit $|$ tag $|$ physical page number
+		\item use virtual page number as the tag (?) to index the TLB
+		\item PAGE FAULT: a page is selected to be replaced. Replaced page is written on the disk - takes forever!
+		\item set dirty bit in TLB when any data in page is written. When TLB entry is replacd, corresponding Page dirty bit is set in page table entry
+	\end{itemize}
+% section pages (end)
+\section{datapaths} % (fold)	
+\label{sec:datapahts}
+\begin{enumerate}
+	\item instruction fetch
+	\item decode/register read
+	\item execute
+	\item memory
+	\item register write
+\end{enumerate}
+\begin{center}\textsc{control hazards}\end{center} 
+\begin{enumerate}
+	\item insert special branch comparator in stage 2: as soon as instruction is decoded, make a decision and set the value of the PC. We don't need no-ops for this, but branches are idle in the last three stages
+	\item predict outcome of a branch. cancel all instructions in pipeline that depended on a wrong guess. (usually predict that all branches are not taken bc it's similar)
+	\item redefine branches: whether or not we take the branch, the instruction followed by the branch gets executed (branch-delay slot). Delayed Branch means that we always execute inst after branch (MIPS uses this one). Worst-case: put a no-op in the branch delay slot. Better case: place some instruction preceding the branch in the branch-delay slot (as long as this doesn't affect the logic of the program3)
+\end{enumerate}
+% section datapahts (end)
+\section{dependability $|$ reliability} % (fold)	
+\label{sec:dependability_reliability}
+\begin{center}\textsc{dependability measures}\end{center} 
+	\begin{itemize}
+		\item Mean time to failure: MTTF
+		\item Mean time to repair MTTR
+		\item Mean time between failures MTBF = MTTF + MTTR
+		\item availability = $\frac{\text{MTTF}}{\text(MTTF+MTTR)} $
+	\end{itemize}
+\begin{center}\textsc{hamming stuff}\end{center} 
+	\begin{itemize}
+		\item hamming distance between two strings of equal length is the number of positions at which the corresponding symbols are different. It measures the minimum number of substitutions required to change the one string into the other
+		\item use extra parity bits to allow the position identification of a single error. Mark all positions that are powers of 2 as parity bits (1, 2, 4, 8, ...). All other bit positions are for the data.
+		\begin{itemize}
+			\item bit 0001 checks odd positions
+			\item bit 0010 checks 2,3,6,7,10,11,14,15...
+			\item bit 0100 checks 4-7, 12-15,20-23...
+			\item bit 1000 checks 8-15, 24-31,40-47...
+		\end{itemize}
+		\item can add extra parity bit covering the entire word for double error detection
+	\end{itemize}
+% section dependability_reliability (end)
+\end{document}
