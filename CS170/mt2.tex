@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[10pt,twocolumn]{article}
 \usepackage{amsmath,amssymb,fullpage,fancyhdr}
 \setlength{\parindent}{0in}
 
@@ -7,7 +7,7 @@
 {\bf longest increasing subsequence: $O(n^2)$}:
 $L(j)$=len of longest subsequence ending @ j. $L(j)=1+\max\{L(i)\}$ where $i<j,a_i < a_j \rightarrow (i,j)$ is an edge. Return $\max\{L(i) for i\leq n\}$, and loop from $i=n\rightarrow 0$
 
-{\bf edit distance: $O(m\cdot n)$}: $E[m,n]=$min num of edits to change $x[1\cdots m]$ to $y[1\cdots n]$. \[E[m,n] = \min\left\{ \begin{array}{l l} \cdots x[m] , \cdots - & \quad \mbox{delete x[m]: $E[m,n]=1+E[m-1,n]$} \\ \cdots -, \cdots y[n] & \quad \mbox{insert y[n]: $E[m,n]=1+E[m,n-1]$} \\ \cdots x[m], \cdots y[n] & \quad \mbox{change x[m] to y[n]: $E[m,n]=E[m-1,n-1] +$ (1 if diff, 0 else)}  \end{array} \right. \]
+{\bf edit distance: $O(m\cdot n)$}: $E[m,n]=$min num of edits to change $x[1\cdots m]$ to $y[1\cdots n]$. E[m,n] = \[\min\left\{ \begin{array}{l l} \cdots x[m] , \cdots - \\ \mbox{delete x[m]: $E[m,n]=1+E[m-1,n]$} \\ \cdots -, \cdots y[n] \\ \quad \mbox{insert y[n]: $E[m,n]=1+E[m,n-1]$} \\ \cdots x[m], \cdots y[n] \\ \quad \mbox{change x[m] to y[n]:}\\ \mbox{ $E[m,n]=E[m-1,n-1] +$ (1 if diff, 0 else)}  \end{array} \right. \]
 
 Initialize $i=0\cdots m: E[i,0] = i \quad j=0\cdots n: E[0,j]=j$. Loop $i=1\cdots m, j=1\cdots n, E[i,j]$
 
@@ -17,10 +17,17 @@ Initialize $i=0\cdots m: E[i,0] = i \quad j=0\cdots n: E[0,j]=j$. Loop $i=1\cdot
 
 {\bf Shortest path (all pairs of vertices): $O(|V|\cdot(|V|+|E|))$}: $dist(v,i)=$ dist from $s$ to $v$ using $i$ edges. $dist(v,i)=\displaystyle\min_{e=(w,v)}\{len(e)+dist(w,i-1)\}$. For all $v\in V \quad dist(v,0)=\infty, dist(s,0)=0$. for $i=1\cdot |V|$, for all $v\in V$, update.
 
-{\bf Independent Sets: $O(|V|+|E|)$}: $I(u)=$size of largest independent set in subtree rooted at $u$. \[I(u) = \max\left\{ \begin{array}{l l} 1+\displaystyle\sum_{grandchildren} I(g_i) & \quad \mbox{if u in largest independent set} \\ \displaystyle\sum_{children} I(c_i) & \quad \mbox{u isn't} \\ \end{array} \right. \]
+{\bf Independent Sets: $O(|V|+|E|)$}: $I(u)=$size of largest independent set in subtree rooted at $u$. \[I(u) = \max\left\{ \begin{array}{l l} 1+\displaystyle\sum_{grandchildren} I(g_i) & \quad \mbox{if $u\in I(n)$} \\ \displaystyle\sum_{children} I(c_i) & \quad \mbox{u isn't} \\ \end{array} \right. \]
 
 DFS traversal: postvisit[u] = update (does $u$ after children of $u$ are done)
 
 {\bf Travelling Salesman: $O(2^nn^2)$} 
+Subset $S \leq V$, $\{1\} \in S$.
+
+for $j\in S, C(S,j)=$length of shortest path that starts at 1, ends at $j$, and visits each vertex in S once. If $|S| > 1, C(S,1)=\infty$.
+
+update: $C(S,j)=\displaystyle\min_{i\in S, i\neq j, (i,j)\in E}\{C(S-\{j\},i)+len(i,j)\}$
+
+For $S=2\cdots n: \mbox{for all sizes of S,}$ for all subsets $S\leq \{1\cdots n\}$ of size $s$ (including $\{i\}$): $C(S,1)=\infty$ for all $j\in S, j\neq 1, update$
 
 \end{document}
