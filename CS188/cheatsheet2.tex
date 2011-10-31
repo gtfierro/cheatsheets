@@ -1,0 +1,116 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage{amsmath,amssymb,graphicx}
+\setlength{\parindent}{0in}
+\begin{document}
+
+		\begin{center}	\scalebox{.8}{%
+	\begin{tabular}{| l | r |}
+		\hline
+	n & Number of states in the problem \\ \hline
+	b & the average branching factor (\# of successors) \\ \hline
+	$C^*$ & Cost of least cost solution \\ \hline
+	s & depth of the shallowest solution \\ \hline
+	m & Max depth of the search tree \\ \hline
+	\end{tabular}}\end{center}
+		\begin{center}\scalebox{0.5}{%
+			\begin{tabular}{| l | l || c | c | c | r |}
+			\hline
+	Algorithm & Modifiers & Complete? & Optimal? & Time & Space \\ \hline
+	DFS && N & N & infinite & infinite \\ \hline
+	DFS & w/ cycle checking & Y & N & $O(b^m)$ & $O(bm)$ \\ \hline
+	BFS && Y & $N^*$ & $O(b^{s+1})$ & $O(b^{s+1})$ \\ \hline
+	ID && Y & $N^*$ & $O(b^{s+1})$ & $O(bs)$ \\ \hline
+	UCS && $Y^*$ & Y & $O(b^{C^*/\epsilon})$ & $O(b^{C^*/\epsilon})$ \\ \hline
+
+	\end{tabular}}\end{center}
+	$A*$ search
+Uniform-cost orders by path cost (backward cost) $g(n)$
+
+Best-first(greedy) orders by goal proximity, or forward cost $h(n)$
+
+$A^*$ orders by the sum $f(n) = g(n) + h(n)$
+
+only stop when we {\bf dequeue} a goal
+optimal with admissible heuristics
+
+Weighted $A^*$ expands states in the order of $f=g+\epsilon\cdot h$. $\epsilon > 1$ = bias towards states that are closer to goal: trades off optimality for speed: $\epsilon$ is suboptimal: cost(solution) $\leq \epsilon\cdot$cost(optimal solution)
+	
+	Anytime $A^*$: for $\epsilon \in \{\epsilon_1,\epsilon_2,\cdots,1\}$ run weighted $A^*$
+		
+		$A^*$ does minimum number of expansion O(n) for finding optimal solution
+
+
+		We can solve small MDPs exactly offline $\rightarrow$ Value and policy iteration $|$
+		We can estimate values $V^\pi(s)$ directly for a fixed policy $\pi$ $\rightarrow$ Temporal difference learning $|$
+		We can estimate $Q^*(s,a)$ for the optimal policy while executing an exploration policy $\rightarrow$ Q-learning, Exploratory action selection
+
+		An MDP is defined by: A set of states $s \in S$, A set of actions $a \in A$, A transition fxn $T(s,a,s')$ $\leftarrow$ probability that a from s leads to s': $P(s' | s, a)$. Also called the model,  A reward fxn $R(s,a,s')$, A start state (or distribution), maybe a terminal state
+
+	Fundamental operation: compute the values (optimal expectimax utilities) of states s. Optimal values define optimal policies!
+	\begin{itemize}
+		\item Define value of a state s: $V^*(s)$= expected utility starting in s and acting optimally
+		\item define the value of a q-state (s,a): $Q^*(s,a)$=expected utility starting in s, taking action a and then acting optimally
+		\item Define the optimal policy: $\pi^*(s)$ = optimal action from state s
+	\end{itemize}
+	Bellman Equations: definition of "optimal utility" leads to a simple one-step lookahead relationship amongst optimal utility values: Optimal rewards = maximize over first action and then follow optimal policy:
+$V^*(s) = max_a Q^*(s,a) \quad Q^*(s,a) = \displaystyle\sum_{s'}T(s,a,s')[R(s,a,s')+\gamma V^*(s')]$
+
+	\textbf{Value Estimates: }Calculate estimates $V_k^*(s)$ $\leftarrow$ not the optimal value of s! It's the optimal value considering only next k time steps. As k $\rightarrow\infty$, approaches optimal value
+
+\textbf{Value Iteration}	
+ $V_i^*(s):$the expected discounted sum of rewards accumulated when starting from state s and acting optimally for a horizon of i time steps,  Start with $V_0^*(s)=0$, then $V^*_{i+1}(s)\leftarrow max_a \displaystyle\sum_{s'}T(s,a,s')[R(s,a,s')+\gamma V_i^*(s')] \leftarrow$ this is called a value update. Repeat until convergence. Approximations get refined towards optimal values. Computer optimal values for all states all at once using successive approximations (before you start moving)
+
+	We can also compute the utility of a state s under a fix (general non-optimal) policy. Similar definition for $V^\pi(s)$:
+Solve with modifying Bellman updates.
+		$V_0^\pi(s)=0$
+		Then $V_{i+1}^\pi(s)\leftarrow \displaystyle\sum_{s'}T(s,\pi(s),s')[R(s,\pi(s),s')+\gamma V_i^\pi(s')]$
+		 OR solve it as a linear system
+
+	Policy Iteration
+	\begin{itemize}
+		\item Step 1: Policy evaluation: calculate utilities for some fixed policy (not optimal utilities!) until convergence
+		\item Step 2: Policy improvement: update policy using one-step look-ahead with resulting converged (but not optimal) utilities as future values
+		\item repeat until policy converges
+	\end{itemize}
+	In value iteration: every pass updates both utilities and policy. In policy iteration: several passes to update utilities with frozen policy with occasional passes to update policies
+
+	For {\bf reinforcement learning} still assume an MDP, but don't know T or R. Don't know which states are good or what the actions do.
+	\begin{itemize}
+		\item Learn the model empirically through experience. Solve for values as if the learned model were correct
+		\item Count outcomes for each s,a . Normalize to give estimate of T(s,a,s'). Discover R(s,a,s') when we experience (s,a,s')
+		\item Model-based RL: first act in MDP and learn the transition model and reward fxn, then run value iteration or policy iteration with the learned models and fxns. Advantage: efficient use of data. Disadvantage: requires building a model for T, R
+		\item Model-free RL: bypass the need to learn the model and fxn! Approaches: direct evaluation, temporal difference learning, q-learning
+	\end{itemize}
+	\textbf{Direct Evaluation: }repeatedly execute the policy $\pi$, estimate the value of the state s as the average over all times the state s was visited of the sum of discounted rewards accumulated from state s onwards. (limitations:) assume random initial state, assumes the value of a state is known perfectly based on past runs.
+
+	Temporal Difference Learning
+	\begin{itemize}
+		\item learn from every experience! Update V(s) each time we experience (s,a,s',r). Likely s' will contribute updates more often
+		\item policy still fixed. Move values toward value of whatever successor occurs: running average.
+		\item Sample of V(s): $sample = R(s,\pi(s),s')+\gamma V^\pi(s')$, Update to V(s): $V^\pi(s)\leftarrow (1-\alpha)V^\pi(s)+(\alpha)\cdot sample$
+		\item Same update: $V^\pi(s)\leftarrow V^\pi(s)+\alpha(sample-V^\pi(s))$ ($\alpha$ is the learning rate)
+		\item If we want to turn values into a new policy we can't do this. Try learning Q-values directly
+	\end{itemize}
+	Q-Value Iteration
+	\begin{itemize}
+		\item Value iteration: find successive approx optimal values. Start with $V_0(s)=0$. Given $V_i$, calculate the values for all states for depth i+1 $v_{i+1}(s)\leftarrow max_a \displaystyle\sum_{s'}T(s,a,s')[R(s,a,s')+\gamma V_i(s')]$
+		\item But Q-values are more useful! $Q_0(s,a)=0$. Given $Q_i$ calculate q-values for all q-states for depth i+1: $Q_{i+1}(s,a)\leftarrow \displaystyle\sum_{s'}T(s,a,s')[R(s,a,s')+\gamma max_{a'}Q_i(s',a')]$
+	\end{itemize}
+	Q-Learning: sample-based Q-value iteration
+	\begin{itemize}
+		\item Learn $Q^*(s,a)$ values. Receive a sample (s,a,s',r). Consider your old estimate $Q(s,a)$
+		\item New sample estimate: $Q^*(s,a,)=\displaystyle\sum_{s'}T(s,a,s')[R(s,a,s')+\gamma max_{a'}Q^*(s',a')]$ 
+		\item incorporate new estimate into running average: $Q(s,a)\leftarrow (1-\alpha)Q(s,a)+(\alpha)[sample]$ (sample = $R(s,a,s')+\gamma max_{a'}Q(s',a')$)
+		\item Q-learning converges to optimal policy. Learn optimal policy w/o following it
+		\item In realistic situations, we can't learn about every single state, so we generalize: learn about some small number of training states through experience, and generalize that experience to new, similar states
+		\item Feature-based representations are our solution: Features are functions from states to real numbers that capture important properties of the state.
+		Can write a q or value fxn for any state using a few weights: $V(s)=\omega_1f_1(s)+\omega_2f_2(s)+\cdots+\omega_nf_n(s) \quad Q(s,a) = \omega_1f_1(s,a)+\omega_2f_2(s,a)+\cdots+\omega_nf_n(s,a)$
+		\end{itemize}
+
+	Policy search: often feature-based policies that work well aren't the ones that approximate V and Q best. We should learn the policy that maximizes rewards rather than the value that predicts rewards
+	\begin{itemize}
+		\item Start with an initial linear value fxn or Q-fxn
+		\item Nudge each feature weight up and down and see if your policy is better than before
+		\item need to run many sample episodes!
+	\end{itemize}
+\end{document}

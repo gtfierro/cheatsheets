@@ -1,0 +1,85 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage{amsmath,amssymb,fullpage,xypic,graphicx}
+\setlength{\parindent}{0in}
+\begin{document}
+\newcommand{\Perp}{\perp \! \! \! \perp}
+\begin{center}\textsc{probability}\end{center} 	
+\textbf{Conditional probability:} $P(x|y)=\frac{P(x,y)}{P(y)}=\frac{P(y|x)P(x)}{P(y)}  \quad$ {\bf Chain rule:}  $P(X_1,\ldots,X_n)=\displaystyle\prod_{i=1}^nP(x_i|\text{parents}(X_i))\quad$ {\bf $X\Perp Y|Z$} if $P(x,y|z)=P(x|z)P(y|z) \text{or} P(x|y,z)=P(x|z) \text{or} P(y|x,z)=P(y|z)$
+
+	
+\begin{center}\textsc{bayes nets}\end{center} 
+
+\textbf{Inference by enumeration}: chain rule: $P(X_1,\ldots,X_n)=\displaystyle\prod_{i=1}^nP(x_i|\text{parents}(X_i))$. sum out the hidden variables.
+	\[P(B|j,m)\propto P(B,j,m)=\displaystyle\sum_e \displaystyle\sum_a P(B,j,m,e,a)\]
+	\[=\displaystyle\sum_e	\displaystyle\sum_a	P(b)P(e)P(a|b,e)P(j|a)P(m|a)\]
+	
+\textbf{Variable elimination}: do a calculation once and save it for later use \[P(B,j,m)=\underbrace{P(B)}_{f_1(B)} \displaystyle\sum_e \underbrace{P(e)}_{f_2(E)} \displaystyle\sum_a \underbrace{P(a|B,e)}_{f_3(A,B,E)} \underbrace{P(j|a)}_{f_4(A)} \underbrace{P(m|a)}_{f_5(A)}\] Sum out $A$ from the product of $f_3,f_4,f_5$ to make a new $2\times2$ factor $f_6(B,E)$:\[f_6(B,E) = \displaystyle\sum_a f_3(A,B,E)\times f_4(A)\times f_5(A) =\] \[f_3(a,B,E)\times f_4(a)\times f_5(a) + f_3(\neg a,B,E)\times f_4(\neg a)\times f_5(\neg a)\] Now we have \[P(B,j,m)=f_1(B)\times \displaystyle\sum_e f_2(E)\times f_6(B,E)\] (remember that  if you have an entry $P(A,B)\times P(B,C) \Rightarrow P(A,B,C) = P(A,B)\cdot P(B,C)$)
+
+{\bf Likelihood weighting} avoids the inefficiency of rejection sampling by generating only events that are consistent with the evidence e. We fix the values for the evidence var {\bf E} and sample only the nonevidence variables, guaranteeing that each event we generate is consistent with the evidence. Before tallying the counts in the distribution for the query var, we have to weight event by the {\bf likelihood} that the event accords to the evidence, measured by the product of the conditional probabilities for each evidence variable given its parents. Consider the query $P(\text{Rain} | \text{Cloudy=true, WetGrass=true})$ with the ordering Cloudy, Sprinkler, Rain, WetGrass (though any topological ordering will work). First, set weight $w$ to 1.0 then generate an event: \textbf{1.} Cloudy is an evidence var with the value true so we take $w\leftarrow w\cdot P(\text{Cloudy=true})=.5$
+\textbf{2.} Sprinkler is {\bf not} an evidence var, so sample from the distribution so far: $P(\text{Sprinkler}|\text{Cloudy=true})$. Say we get "false" from this sample.
+	\textbf{3.} Rain is not an evidence var, so we sample from $P(\text{Rain}|\text{Cloudy=true})$. say we get "true" from this sample.
+	\textbf{4.}WetGrass {\bf is} an evidence var with the value true, so we adjust the weight again:
+	
+	 $w\leftarrow w\cdot P(\text{WetGrass=true}|\text{Sprinkler=false ,Rain=true})$
+Now we have a weighted sample, the event [true,false,true,true] with a weight $w$ and we tally this in our sample distribution under Rain = true.
+
+{\bf Gibbs sampling}:
+Look at the query $P(\text{Rain}|\text{Sprinkler=true, WetGrass=true})$. Essentially, what we do is set evidence then set al other variables to random values (by prior sampling or uniformly sampling) then choosing a non-evidence variable and sample this variable conditioned on nothing else changing (we generate samples where each sample is different from the previous one by only a single variable). Each state visited during this process is a sample that contributes to the estimate for the query variable Rain. If the process visits 20 states where Rain is true and 60 where Rain is false, then $P(\text{Rain=true})=.25$ and $P(\text{Rain=false})=.75$. 
+
+\textbf{Active triples}: (\emph{active} means it carries information, or dependence)
+	\textbf{1.} $A\rightarrow B\rightarrow C$
+	\textbf{2.} $A\leftarrow B\rightarrow C$
+	\textbf{3.} $A\rightarrow \underline{B}\leftarrow C$
+	\textbf{4.} $A\rightarrow B \leftarrow C : B \rightarrow \underline{D}$
+
+\textbf{Inactive triples}
+	\textbf{1.} $A\rightarrow \underline{B} \rightarrow C$
+	\textbf{2.} $A\leftarrow \underline{B} \rightarrow C$
+	\textbf{3.} $A\rightarrow B \leftarrow C$ 
+
+
+\begin{center}\textsc{hidden markov models}\end{center} 
+	Defined by: initial distribution $P(X_1)$, Transitions $P(X|X_{-1})$ and emissions $P(E|X)$.  Two important independence properties: markov hidden process, future depends on past via the present. Current observation independent of all else given current state.
+	\begin{itemize}
+		\item Passage of Time: Have current belief $P(X|$evidence to date$)$: $B(X_t)=P(X_t|e_{1:t})$
+		
+		After one time step passes: $P(X_{t+1}|e_{1:t})=\displaystyle\sum_{x_t}P(X_{t+1}|x_t)P(x_t|e_{1:t})$, or
+		$B'(X_{t+1})=\displaystyle\sum_{x_t}P(X'|x)B(x_t)$
+		Beliefs get "pushed" through the transitions
+		
+	\item Observation: Have current Belief $P(X|$previous evidence$)$: $B'(X_{t+1})=P(X_{t+1}|e_{1:t})$
+	Then: $P(X_{t+1}|e_{1:t+1})\propto P(e_{t+1}|X_{t+1})P(X_{t+1}|e_{1:t})$, or
+	$B(X_{t+1})\propto P(e|X)B'(X_{t+1})$
+	Beliefs are reweighted by likelihood of all evidence. But unlike passage of time, we have to renormalize.
+	\item Forward algorithm: Given evidence at each time and want to know $B_t(X)=P(X_t|e_{1:t})$, Can derive the following updates: $P(x_t|e_{1:t})\propto P(e_t|x_t)\displaystyle\sum_{x_{t-1}}P(x_t|x_{t-1})P(x_{t-1},e_{1:t-1})$. This is variable elimination in order $X_1,X_2,\ldots$
+	\item Backward algorithm: $P(e_{t+1:N}|x_t)=\displaystyle\sum_{x_{t+1}}P(e_{t+1:N}|x_{t+1})P(x_{t+1}|x_t)$
+	\item Online Belief Updates: for every time step, we start with current $P(X|$evidence$)$. We update for time: $P(x_t|e_{1:t-1})=\displaystyle\sum_{x_{t-1}}P(x_{t-1}|e_{1:t-1})\cdot P(x_t|x_{t-1})$. Then we update for evidence: $P(x_t|e_{1:t})\propto_XP(x_t|e_{1:t-1})\cdot P(e_t|x_t)$. The forward algorithm does both at once (and doesn't normalize)
+	\item Particle filtering (the other inference method for HMMs). Filtering is an approximate solution. Sometimes $X$ is too big to use exact inference. Track samples of X, not all values (samples are called particles)
+
+		 Representation: representation of $P(X)$ is now a list of $N$ particles (samples). Generally, $N<<|X|$. $P(X)$ is approximated by number of particles with value x.
+		
+		 Elapse Time: Each particle is moved by sampling its next position from the transition model: $x'=$sample$(P(X'|x))$. This is like prior sampling -- samples' frequencies reflect the transition probabilities. This captures the passage of time.
+		
+		 Observe: don't sample the observation, we fix it. This is similar to likelihood weighting, so we downweight our samples based on the evidence: 
+		
+		$w(x)=P(e|x) \quad B(X)\propto P(e|X)B'(X)$
+		
+		 Resample: Rather than tracking weighted samples, we resample N times. We choose from our weighted sample distribution (draw w/ replacement). This is equivalent to renormalizing the distribution. Now the update is complete for this time step - continue w/ the next one
+
+	\end{itemize}
+	Dynamic Bayes Nets (DBNs)
+	\begin{itemize}
+		\item We want to track multiple variables over time, using multiple sources of evidence. Repeat a fixed Bayes net structure at each time. Variables from time $t$ can condition on those from $t-1$. Discrete valued dynamic Bayes nets are also HMMs
+		\item Exact inference in DBNs: variable elimination applies to dynamic Bayes nets. Procedure: "unroll" the network for T time steps, then eliminate variables until $P(X_t|e_{1:T})$ is computed. Online belief updates: Eliminate all variables from the previous time step; store factors for current time only
+		\item DBN Particle Filters: a particle is a complete sample for a time step. \textbf{Initialize}: Generate prior samples for the $t=1$ Bayes net. \textbf{Elapse time}: sample a successor for each particle
+			\textbf{Observe}: weight each entire sample by the likelihood of the evidence condition on the sample
+	\end{itemize}
+	\begin{center}\textsc{machine learning}\end{center} 
+		Binary Perceptron Update: Start with zero weights. For each training instance, classify with current weights:\[ y = \left\{ \begin{array}{ll}
+		         +1 & \mbox{if $w\cdot f(x) \geq 0$}\\
+		        -1 & \mbox{if $w\cdot f(x) < 0$}\end{array} \right. \]
+		Learning multiclass perceptron: start with zero weights, pick up training instances one by one, classify with current weights: \[y=\text{argmax}_yw_y\cdot f(x) = \text{argmax}_y \displaystyle\sum_i w_{y,i}\cdot f_i(x) \]If correct, no change! If wrong, lower score of wrong answer, raise score of right answer: $w_y=w_y-f(x) \quad w_{y^*}=w_{y^*}+f(x)$
+		
+		Fixing the perceptron: adjust the weight update to mitigate these effects. MIRA (Margin Infused Relaxed Algorithm) chooses an update size that fixes the current mistake.  $\text{min}_w \frac{1}{2} ||w_y-w'_y||^2$. We want $w_{y^*}\cdot f(x) \geq w_y\cdot f(x)+1$ (the +1 helps to generalize) \[w_y=w'_y-\tau f(x)\] \[w_{y^*}=w'_{y^*}+\tau f(x)\]. We want to minimize $\tau$ but not $\tau =0$ or we can't update anything, so we need the minimum where equality holds. $w_y$ is weight for true label, $w_y'$ is weight for guessed label
+
+\end{document}
