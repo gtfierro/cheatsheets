@@ -3,6 +3,14 @@
 \setlength{\parindent}{0in}
 
 \begin{document}
+\begin{center}\textsc{greedy algorithms}\end{center} 
+{\bf kruskal:}  repeatedly add the next lightest edge to $G'$ that does not create a cycle. makeset(x), find(x): identify x's connected component (labeled by root), union(x,y): merge connected components. For all $x\in V: makeset(x)$. X=$\{\}$ (empty set). for all $e=(x,y)$ (in increasing order of weight), if $find(x)\neq find(y): X=X \cup \{e\}, union(x,y)$. Cost = sorting edges + $2\cdot |E|\cdot$cost(find) + $(|V|-1)\cdot$cost(union) + $|V|\cdot$cost(makeset).
+
+{\bf prim}: similar to Dijkstra. Start form any vertex, find the lightest edge extending from your current tree and added that tree and ending vertex.
+
+{\bf horn formulas:} $(x_1\land x_2 \land \cdots \land x_k)\Rightarrow x_{k+1}$ OR $(\bar{x_1}\lor \bar{x_2}\lor \cdots \lor \bar{x_k}\lor x_{k+1})$. Start with all vars = false. While there is an unsatisfied implication, set the implied (rightmost) variable to true. Return the truth assignments
+	
+	
 \begin{center}\textsc{dynamic programming algs}\end{center} 
 {\bf longest increasing subsequence: $O(n^2)$}:
 $L(j)$=len of longest subsequence ending @ j. $L(j)=1+\max\{L(i)\}$ where $i<j,a_i < a_j \rightarrow (i,j)$ is an edge. Return $\max\{L(i) for i\leq n\}$, and loop from $i=n\rightarrow 0$
